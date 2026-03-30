@@ -1,0 +1,4 @@
+﻿Generado: 2026-03-28 00:56:46
+APK: C:\Users\danil\Downloads\appfitness\dist\appfitness-android-release.apk
+API_BASE_URL: http://192.168.40.30/appfitness_api
+Config usado: (no usado)
