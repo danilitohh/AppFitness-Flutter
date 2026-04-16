@@ -1,8 +1,12 @@
 <?php
 declare(strict_types=1);
 
+// Endpoint de login.
+// Valida credenciales, admite migracion de hash legacy y devuelve el usuario.
+
 require __DIR__ . '/bootstrap.php';
 
+// 1. Validacion basica del request.
 app_require_post();
 $payload = app_read_json_body();
 
@@ -24,6 +28,7 @@ if (trim($password) === '') {
 }
 
 try {
+    // 2. Busqueda de usuario y verificacion de credenciales.
     $db = app_db();
     $user = app_find_user_by_email($db, $email);
 
@@ -54,6 +59,7 @@ try {
         $invalidCredentials();
     }
 
+    // 3. Si el hash es viejo o requiere upgrade, se reemplaza al iniciar sesion.
     if ($usedLegacyHash || app_password_needs_rehash($storedHash)) {
         $newHash = app_password_hash($password);
         $updateStmt = $db->prepare(
@@ -72,6 +78,7 @@ try {
         'user' => app_user_payload($user),
     ]);
 } catch (mysqli_sql_exception $error) {
+    // 4. Error de infraestructura o base de datos.
     app_send_json(500, [
         'success' => false,
         'message' => 'Error al validar las credenciales.',

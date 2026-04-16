@@ -111,4 +111,30 @@ void main() {
     expect(find.text('Aumenta ~71 g de proteina hoy.'), findsOneWidget);
     expect(find.text('Meta: ~33 g de proteina por comida.'), findsOneWidget);
   });
+
+  testWidgets('Coach de nutricion evita overflow en chips largos', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(380, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final store = await buildStore();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: NutritionScreen(store: store)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('3-4 horas despues de la comida principal'),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
 }

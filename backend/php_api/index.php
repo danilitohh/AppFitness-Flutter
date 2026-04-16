@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+// Endpoint de healthcheck.
+// Permite comprobar rapido que la API esta desplegada y los endpoints visibles.
+
 header('Content-Type: application/json; charset=utf-8');
 
 echo json_encode([

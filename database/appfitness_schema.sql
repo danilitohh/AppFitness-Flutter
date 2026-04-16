@@ -1,5 +1,6 @@
 -- Esquema MySQL/MariaDB para AppFitness
 -- Motor probado con XAMPP MariaDB 10.4.x
+-- Organizado por modulos: autenticacion, metas, registros diarios e hidratacion.
 
 CREATE DATABASE IF NOT EXISTS appfitness
   CHARACTER SET utf8mb4
@@ -7,6 +8,10 @@ CREATE DATABASE IF NOT EXISTS appfitness
 
 USE appfitness;
 
+-- ---------------------------------------------------------------------------
+-- Autenticacion y cuentas.
+-- Usuarios base y tickets para recuperacion de contrasena.
+-- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS users (
   id VARCHAR(40) NOT NULL,
   full_name VARCHAR(120) NOT NULL,
@@ -34,6 +39,10 @@ CREATE TABLE IF NOT EXISTS password_reset_tickets (
     ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ---------------------------------------------------------------------------
+-- Objetivos y configuracion fitness.
+-- Persisten metas numericas usadas por dashboard, coach y chatbot.
+-- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS fitness_goals (
   user_id VARCHAR(40) NOT NULL,
   calorie_goal INT UNSIGNED NOT NULL DEFAULT 2200,
@@ -52,6 +61,10 @@ CREATE TABLE IF NOT EXISTS fitness_goals (
   CONSTRAINT chk_goals_target_weight CHECK (target_weight_kg > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ---------------------------------------------------------------------------
+-- Registros operativos del seguimiento diario.
+-- Entrenos, comidas, peso e hidratacion historica por usuario.
+-- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS workouts (
   id VARCHAR(40) NOT NULL,
   user_id VARCHAR(40) NOT NULL,

@@ -1,8 +1,12 @@
 <?php
 declare(strict_types=1);
 
+// Endpoint de registro.
+// Crea el usuario, valida datos base y genera metas iniciales por defecto.
+
 require __DIR__ . '/bootstrap.php';
 
+// 1. Validacion de entrada.
 app_require_post();
 $payload = app_read_json_body();
 
@@ -33,6 +37,7 @@ if ($passwordError !== null) {
 }
 
 try {
+    // 2. Verifica que el correo no exista y crea el usuario nuevo.
     $db = app_db();
 
     $existing = app_find_user_by_email($db, $email);
@@ -57,6 +62,7 @@ try {
         'user' => app_user_payload($createdUser),
     ]);
 } catch (mysqli_sql_exception $error) {
+    // 3. Error de persistencia en base de datos.
     app_send_json(500, [
         'success' => false,
         'message' => 'Error al crear la cuenta en base de datos.',

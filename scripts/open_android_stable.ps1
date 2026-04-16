@@ -3,6 +3,9 @@ param(
     [string]$ApiBaseUrl
 )
 
+# Script operativo para abrir la app en un emulador Android estable.
+# Resuelve rutas de herramientas, inicia el AVD y ejecuta `flutter run`.
+
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 

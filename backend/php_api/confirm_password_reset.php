@@ -1,8 +1,12 @@
 <?php
 declare(strict_types=1);
 
+// Endpoint para confirmar recuperacion de contrasena.
+// Valida codigo temporal, actualiza password y marca el ticket como usado.
+
 require __DIR__ . '/bootstrap.php';
 
+// 1. Validacion del request y formato de datos.
 app_require_post();
 $payload = app_read_json_body();
 
@@ -33,6 +37,7 @@ if (strlen($code) !== 6) {
 }
 
 try {
+    // 2. Recupera el ticket asociado al correo y valida su vigencia.
     $db = app_db();
 
     $stmt = $db->prepare(
@@ -84,6 +89,7 @@ try {
         ]);
     }
 
+    // 3. Actualiza la contrasena y consume el ticket para evitar reutilizacion.
     $passwordHash = app_password_hash($newPassword);
     $userId = (string) $row['user_id'];
     $ticketId = (int) $row['ticket_id'];
@@ -111,6 +117,7 @@ try {
         'message' => 'Contrase?a actualizada. Ya puedes iniciar sesion.',
     ]);
 } catch (mysqli_sql_exception $error) {
+    // 4. Error de base de datos durante la actualizacion.
     app_send_json(500, [
         'success' => false,
         'message' => 'No se pudo actualizar la contrase?a.',

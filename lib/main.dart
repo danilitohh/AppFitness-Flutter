@@ -10,6 +10,10 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:shared_preferences/shared_preferences.dart';
 
+// -----------------------------------------------------------------------------
+// Estilo global y recursos visuales compartidos.
+// Colores, espaciados y assets base reutilizados en toda la aplicacion.
+// -----------------------------------------------------------------------------
 const _appPrimary = Color(0xFF0F766E);
 const _appPrimaryDark = Color(0xFF0B5F57);
 const _appAccent = Color(0xFF34D399);
@@ -51,6 +55,10 @@ const _onboardingSurveyAssetPaths = <String>[
   'assets/onboarding_examples/survey_ref_15.jpeg',
 ];
 
+// -----------------------------------------------------------------------------
+// Punto de arranque y composicion raiz de la aplicacion.
+// Configura locale, estado global y tema principal antes de mostrar pantallas.
+// -----------------------------------------------------------------------------
 // Punto de entrada de la aplicacion.
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -416,6 +424,10 @@ class AuthAppScope extends InheritedNotifier<AuthStore> {
   }
 }
 
+// -----------------------------------------------------------------------------
+// Dominio de autenticacion.
+// Modelos, tickets temporales y store para login, registro y recuperacion.
+// -----------------------------------------------------------------------------
 /// Modelo de usuario autenticado.
 class AuthUser {
   const AuthUser({
@@ -890,6 +902,10 @@ class AuthStore extends ChangeNotifier {
 /// Vistas posibles dentro del flujo de autenticacion.
 enum AuthView { login, register, forgotPassword }
 
+// -----------------------------------------------------------------------------
+// UI de autenticacion.
+// Contenedores, formularios y widgets de apoyo del acceso a la aplicacion.
+// -----------------------------------------------------------------------------
 /// Contenedor visual del modulo de autenticacion.
 class AuthShell extends StatefulWidget {
   const AuthShell({super.key});
@@ -1750,6 +1766,10 @@ InputDecoration _authInputDecoration({
   );
 }
 
+// -----------------------------------------------------------------------------
+// Dominio fitness principal.
+// Enumeraciones, perfiles, registros y metas usados por la logica de negocio.
+// -----------------------------------------------------------------------------
 /// Nivel de intensidad para un entrenamiento.
 enum WorkoutIntensity { low, medium, high }
 
@@ -2274,6 +2294,10 @@ class FitnessGoals {
   }
 }
 
+// -----------------------------------------------------------------------------
+// Estado global de negocio.
+// FitnessStore concentra persistencia local, calculos diarios y datos del usuario.
+// -----------------------------------------------------------------------------
 /// Store principal de fitness: concentra estado, calculos y persistencia local.
 class FitnessStore extends ChangeNotifier {
   static const String _workoutsKeyBase = 'fitness_workouts';
@@ -2804,6 +2828,10 @@ class FitnessStore extends ChangeNotifier {
   }
 }
 
+// -----------------------------------------------------------------------------
+// Onboarding base.
+// Flujo inicial para recoger datos del perfil antes del uso habitual.
+// -----------------------------------------------------------------------------
 class OnboardingSurveyScreen extends StatefulWidget {
   const OnboardingSurveyScreen({
     super.key,
@@ -3556,6 +3584,10 @@ class _OnboardingSurveyScreenState extends State<OnboardingSurveyScreen> {
   }
 }
 
+// -----------------------------------------------------------------------------
+// Onboarding guiado extendido.
+// Version paso a paso con preguntas mas ricas sobre salud, horarios y nutricion.
+// -----------------------------------------------------------------------------
 class GuidedOnboardingSurveyScreen extends StatefulWidget {
   const GuidedOnboardingSurveyScreen({
     super.key,
@@ -6277,6 +6309,10 @@ FitnessGoals _buildRecommendedGoals({
   );
 }
 
+// -----------------------------------------------------------------------------
+// Motores de recomendacion.
+// Generadores puros de planes sugeridos para entreno y alimentacion.
+// -----------------------------------------------------------------------------
 class _WorkoutPlanSuggestion {
   const _WorkoutPlanSuggestion({
     required this.template,
@@ -7580,6 +7616,10 @@ List<String> _buildOnboardingRecommendations({
   ];
 }
 
+// -----------------------------------------------------------------------------
+// Shell autenticado y navegacion principal.
+// Tabs del home, acciones flotantes y configuracion contextual del usuario.
+// -----------------------------------------------------------------------------
 /// Shell principal autenticado: tabs + acciones globales.
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -8179,12 +8219,41 @@ class _UserSettingsScreenState extends State<_UserSettingsScreen> {
   }
 }
 
+// -----------------------------------------------------------------------------
+// Chatbot guiado.
+// Mantiene el historial de mensajes y navega por opciones seleccionables.
+// -----------------------------------------------------------------------------
 /// Mensaje individual dentro del historial de chat.
 class _ChatbotMessage {
-  const _ChatbotMessage({required this.text, required this.isUser});
+  const _ChatbotMessage({
+    required this.text,
+    required this.isUser,
+    this.options = const <_ChatbotOptionNode>[],
+    this.showBack = false,
+    this.showHome = false,
+  });
 
   final String text;
   final bool isUser;
+  final List<_ChatbotOptionNode> options;
+  final bool showBack;
+  final bool showHome;
+
+  bool get hasOptions => options.isNotEmpty || showBack || showHome;
+}
+
+class _ChatbotOptionNode {
+  const _ChatbotOptionNode({
+    required this.label,
+    this.prompt,
+    this.children = const <_ChatbotOptionNode>[],
+  });
+
+  final String label;
+  final String? prompt;
+  final List<_ChatbotOptionNode> children;
+
+  bool get hasChildren => children.isNotEmpty;
 }
 
 enum _ChatTopic {
@@ -8261,9 +8330,10 @@ class _SimpleChatbotSheet extends StatefulWidget {
 }
 
 class _SimpleChatbotSheetState extends State<_SimpleChatbotSheet> {
-  final TextEditingController _inputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final List<_ChatbotOptionNode> _optionPath = <_ChatbotOptionNode>[];
   late final List<_ChatbotMessage> _messages;
+  late List<_ChatbotOptionNode> _activeQuestionOptions;
   bool _isTyping = false;
   _ChatTopic _lastTopic = _ChatTopic.none;
 
@@ -8307,16 +8377,160 @@ class _SimpleChatbotSheetState extends State<_SimpleChatbotSheet> {
     'progreso',
   ];
 
+  static const List<_ChatbotOptionNode> _guidedQuestionOptions = [
+    _ChatbotOptionNode(
+      label: 'Progreso diario',
+      children: [
+        _ChatbotOptionNode(
+          label: 'Resumen general',
+          children: [
+            _ChatbotOptionNode(
+              label: 'Resumen de hoy',
+              prompt: 'resumen de hoy',
+            ),
+            _ChatbotOptionNode(
+              label: 'Que me falta hoy',
+              prompt: 'me falta hoy',
+            ),
+          ],
+        ),
+        _ChatbotOptionNode(
+          label: 'Nutricion',
+          children: [
+            _ChatbotOptionNode(
+              label: 'Como voy de agua',
+              prompt: 'como voy de agua',
+            ),
+            _ChatbotOptionNode(
+              label: 'Como voy de calorias',
+              prompt: 'como voy de calorias',
+            ),
+            _ChatbotOptionNode(
+              label: 'Como voy de macros',
+              prompt: 'como voy de macros',
+            ),
+          ],
+        ),
+        _ChatbotOptionNode(
+          label: 'Entreno y peso',
+          children: [
+            _ChatbotOptionNode(
+              label: 'Entreno de hoy',
+              prompt: 'entreno de hoy',
+            ),
+            _ChatbotOptionNode(
+              label: 'Progreso de peso',
+              prompt: 'progreso de peso',
+            ),
+            _ChatbotOptionNode(label: 'Mis metas', prompt: 'mis metas'),
+          ],
+        ),
+      ],
+    ),
+    _ChatbotOptionNode(
+      label: 'Habitos y mejoras',
+      children: [
+        _ChatbotOptionNode(
+          label: 'Habitos semanales',
+          prompt: 'habitos semanales',
+        ),
+        _ChatbotOptionNode(label: 'Recomendaciones', prompt: 'recomendaciones'),
+        _ChatbotOptionNode(label: 'Estoy estancado', prompt: 'estoy estancado'),
+        _ChatbotOptionNode(label: 'Motivacion', prompt: 'motivacion'),
+      ],
+    ),
+    _ChatbotOptionNode(
+      label: 'Registrar en la app',
+      children: [
+        _ChatbotOptionNode(
+          label: 'Registrar peso',
+          prompt: 'donde registrar peso',
+        ),
+        _ChatbotOptionNode(
+          label: 'Registrar comida',
+          prompt: 'donde registrar comida',
+        ),
+        _ChatbotOptionNode(
+          label: 'Registrar entreno',
+          prompt: 'donde registrar entreno',
+        ),
+      ],
+    ),
+    _ChatbotOptionNode(
+      label: 'Bienestar',
+      children: [
+        _ChatbotOptionNode(
+          label: 'Recuperacion',
+          children: [
+            _ChatbotOptionNode(
+              label: 'Calentamiento y movilidad',
+              prompt: 'calentamiento',
+            ),
+            _ChatbotOptionNode(
+              label: 'Descanso y recuperacion',
+              prompt: 'descanso',
+            ),
+            _ChatbotOptionNode(label: 'Sueno', prompt: 'como dormir mejor'),
+          ],
+        ),
+        _ChatbotOptionNode(
+          label: 'Sensaciones',
+          children: [
+            _ChatbotOptionNode(label: 'Tengo hambre', prompt: 'tengo hambre'),
+            _ChatbotOptionNode(label: 'Tengo sed', prompt: 'tengo sed'),
+            _ChatbotOptionNode(label: 'Estoy cansado', prompt: 'estoy cansado'),
+            _ChatbotOptionNode(
+              label: 'Me siento estresado',
+              prompt: 'estoy estresado',
+            ),
+          ],
+        ),
+        _ChatbotOptionNode(
+          label: 'Alertas',
+          children: [
+            _ChatbotOptionNode(
+              label: 'Dolor fuerte o lesion',
+              prompt: 'tengo una lesion',
+            ),
+          ],
+        ),
+      ],
+    ),
+    _ChatbotOptionNode(
+      label: 'Sobre la app',
+      children: [
+        _ChatbotOptionNode(label: 'Que puedes hacer', prompt: 'ayuda'),
+        _ChatbotOptionNode(
+          label: 'Objetivo del proyecto',
+          prompt: 'objetivo del proyecto',
+        ),
+        _ChatbotOptionNode(label: 'Tecnologia', prompt: 'tecnologia'),
+        _ChatbotOptionNode(label: 'Integracion', prompt: 'integracion'),
+      ],
+    ),
+    _ChatbotOptionNode(
+      label: 'Conversacion',
+      children: [
+        _ChatbotOptionNode(label: 'Hola', prompt: 'hola'),
+        _ChatbotOptionNode(label: 'Como estas', prompt: 'como estas'),
+        _ChatbotOptionNode(label: 'Quien eres', prompt: 'quien eres'),
+        _ChatbotOptionNode(label: 'Gracias', prompt: 'gracias'),
+        _ChatbotOptionNode(label: 'Adios', prompt: 'adios'),
+      ],
+    ),
+  ];
+
   @override
   void initState() {
     super.initState();
     // Primer mensaje contextual del asistente.
     _messages = [_ChatbotMessage(text: _buildWelcomeMessage(), isUser: false)];
+    _activeQuestionOptions = _guidedQuestionOptions;
+    _messages.add(_buildQuestionOptionsMessage());
   }
 
   @override
   void dispose() {
-    _inputController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -8378,40 +8592,19 @@ class _SimpleChatbotSheetState extends State<_SimpleChatbotSheet> {
                   }
 
                   final message = _messages[index];
+                  if (message.hasOptions && !message.isUser) {
+                    return _ChatOptionsBubble(
+                      message: message,
+                      onOptionTap: _isTyping ? null : _handleQuestionOption,
+                      onBackTap: _isTyping ? null : _goToPreviousQuestionLevel,
+                      onHomeTap: _isTyping ? null : _resetQuestionOptions,
+                    );
+                  }
                   return _ChatBubble(
                     text: message.text,
                     isUser: message.isUser,
                   );
                 },
-              ),
-            ),
-            const Divider(height: 1),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _inputController,
-                      minLines: 1,
-                      maxLines: 3,
-                      textInputAction: TextInputAction.send,
-                      onSubmitted: (_) => _sendMessage(),
-                      decoration: InputDecoration(
-                        hintText: 'Escribe tu pregunta...',
-                        isDense: true,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  FilledButton(
-                    onPressed: _sendMessage,
-                    child: const Text('Enviar'),
-                  ),
-                ],
               ),
             ),
           ],
@@ -8420,16 +8613,56 @@ class _SimpleChatbotSheetState extends State<_SimpleChatbotSheet> {
     );
   }
 
-  void _sendMessage() {
-    // Agrega mensaje del usuario y responde con un pequeno delay.
-    final text = _inputController.text.trim();
-    if (text.isEmpty || _isTyping) {
+  void _handleQuestionOption(_ChatbotOptionNode node) {
+    if (node.hasChildren) {
+      setState(() {
+        _removeTrailingOptionsMessage();
+        _messages.add(_ChatbotMessage(text: node.label, isUser: true));
+        _optionPath.add(node);
+        _activeQuestionOptions = node.children;
+        _messages.add(_buildQuestionOptionsMessage());
+      });
+      _scrollToBottom();
+      return;
+    }
+
+    final prompt = node.prompt ?? node.label;
+    _submitMessage(userText: node.label, responseInput: prompt);
+  }
+
+  void _goToPreviousQuestionLevel() {
+    if (_optionPath.isEmpty) {
       return;
     }
 
     setState(() {
-      _messages.add(_ChatbotMessage(text: text, isUser: true));
-      _inputController.clear();
+      _removeTrailingOptionsMessage();
+      _optionPath.removeLast();
+      _activeQuestionOptions = _optionPath.isEmpty
+          ? _guidedQuestionOptions
+          : _optionPath.last.children;
+      _messages.add(_buildQuestionOptionsMessage());
+    });
+    _scrollToBottom();
+  }
+
+  void _resetQuestionOptions() {
+    setState(() {
+      _removeTrailingOptionsMessage();
+      _resetQuestionOptionsState();
+      _messages.add(_buildQuestionOptionsMessage());
+    });
+    _scrollToBottom();
+  }
+
+  void _submitMessage({
+    required String userText,
+    required String responseInput,
+  }) {
+    // Agrega mensaje del usuario y responde con un pequeno delay.
+    setState(() {
+      _removeTrailingOptionsMessage();
+      _messages.add(_ChatbotMessage(text: userText, isUser: true));
       _isTyping = true;
     });
     _scrollToBottom();
@@ -8440,11 +8673,44 @@ class _SimpleChatbotSheetState extends State<_SimpleChatbotSheet> {
       }
 
       setState(() {
-        _messages.add(_ChatbotMessage(text: _botResponse(text), isUser: false));
+        _messages.add(
+          _ChatbotMessage(text: _botResponse(responseInput), isUser: false),
+        );
+        _messages.add(_buildQuestionOptionsMessage());
         _isTyping = false;
       });
       _scrollToBottom();
     });
+  }
+
+  _ChatbotMessage _buildQuestionOptionsMessage() {
+    final atRoot = _optionPath.isEmpty;
+    final text = atRoot
+        ? 'Selecciona una categoria para continuar.'
+        : 'Elige una opcion de ${_optionPath.map((node) => node.label).join(' / ')}.';
+
+    return _ChatbotMessage(
+      text: text,
+      isUser: false,
+      options: List<_ChatbotOptionNode>.from(_activeQuestionOptions),
+      showBack: !atRoot,
+      showHome: !atRoot,
+    );
+  }
+
+  void _removeTrailingOptionsMessage() {
+    if (_messages.isEmpty) {
+      return;
+    }
+    final lastMessage = _messages.last;
+    if (!lastMessage.isUser && lastMessage.hasOptions) {
+      _messages.removeLast();
+    }
+  }
+
+  void _resetQuestionOptionsState() {
+    _optionPath.clear();
+    _activeQuestionOptions = _guidedQuestionOptions;
   }
 
   String _botResponse(String input) {
@@ -9265,6 +9531,75 @@ class _SimpleChatbotSheetState extends State<_SimpleChatbotSheet> {
   }
 }
 
+class _ChatOptionsBubble extends StatelessWidget {
+  const _ChatOptionsBubble({
+    required this.message,
+    required this.onOptionTap,
+    required this.onBackTap,
+    required this.onHomeTap,
+  });
+
+  final _ChatbotMessage message;
+  final ValueChanged<_ChatbotOptionNode>? onOptionTap;
+  final VoidCallback? onBackTap;
+  final VoidCallback? onHomeTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        constraints: const BoxConstraints(maxWidth: 300),
+        decoration: BoxDecoration(
+          color: _appSurface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _appOutline),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(message.text),
+            if (message.options.isNotEmpty ||
+                message.showBack ||
+                message.showHome) ...[
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  if (message.showBack)
+                    ActionChip(
+                      onPressed: onBackTap,
+                      label: const Text('Volver'),
+                    ),
+                  if (message.showHome)
+                    ActionChip(
+                      onPressed: onHomeTap,
+                      label: const Text('Inicio'),
+                    ),
+                  ...message.options.map((node) {
+                    final label = node.hasChildren
+                        ? '${node.label} >'
+                        : node.label;
+                    return ActionChip(
+                      onPressed: onOptionTap == null
+                          ? null
+                          : () => onOptionTap!(node),
+                      label: Text(label),
+                    );
+                  }),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Burbuja visual para mensajes del usuario y del bot.
 class _ChatBubble extends StatelessWidget {
   const _ChatBubble({required this.text, required this.isUser});
@@ -9298,6 +9633,10 @@ class _ChatBubble extends StatelessWidget {
   }
 }
 
+// -----------------------------------------------------------------------------
+// Pantallas principales del home.
+// Dashboard, entrenamientos, nutricion y progreso del usuario.
+// -----------------------------------------------------------------------------
 /// Pantalla de inicio con resumen de metricas del dia.
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key, required this.store});
@@ -10733,6 +11072,10 @@ class ProgressScreen extends StatelessWidget {
   }
 }
 
+// -----------------------------------------------------------------------------
+// Widgets visuales reutilizables.
+// Componentes pequenos usados por varias pantallas y tarjetas del dashboard.
+// -----------------------------------------------------------------------------
 /// Tarjeta reutilizable para mostrar una metrica con barra de progreso.
 class MetricCard extends StatelessWidget {
   const MetricCard({
@@ -10858,23 +11201,38 @@ class _CoachChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: _appOutline),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: _appPrimaryDark),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-          ),
-        ],
+    final maxWidth = math.min(MediaQuery.sizeOf(context).width * 0.72, 260.0);
+
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: maxWidth),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: _appOutline),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 1),
+              child: Icon(icon, size: 14, color: _appPrimaryDark),
+            ),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                softWrap: true,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -11296,6 +11654,10 @@ class WeightChartPainter extends CustomPainter {
   }
 }
 
+// -----------------------------------------------------------------------------
+// Catalogo de rutinas y demostraciones.
+// Templates, ilustraciones, tarjetas y detalle visual de ejercicios.
+// -----------------------------------------------------------------------------
 class WorkoutTemplate {
   const WorkoutTemplate({
     required this.id,
@@ -14801,6 +15163,10 @@ Future<void> showWorkoutSheet(
   );
 }
 
+// -----------------------------------------------------------------------------
+// Modales de captura y edicion.
+// Hojas inferiores para registrar entrenos, comidas, peso, metas y coach.
+// -----------------------------------------------------------------------------
 /// Modal para registrar una comida y sus macros.
 Future<void> showMealSheet(BuildContext context, FitnessStore store) async {
   final formKey = GlobalKey<FormState>();
@@ -15570,6 +15936,10 @@ String? _passwordError(String value) {
   return null;
 }
 
+// -----------------------------------------------------------------------------
+// Utilidades transversales.
+// Helpers puros para validacion, formato, hashing y conversiones seguras.
+// -----------------------------------------------------------------------------
 /// Regex simple para validar correo.
 bool _isValidEmail(String value) {
   return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value);

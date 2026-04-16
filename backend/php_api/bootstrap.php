@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 
+// -----------------------------------------------------------------------------
+// Bootstrap comun de la API PHP.
+// Centraliza CORS, lectura JSON, conexion a BD y helpers compartidos.
+// -----------------------------------------------------------------------------
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 header('Access-Control-Allow-Origin: *');
@@ -12,6 +16,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
     exit;
 }
 
+// Helpers HTTP y serializacion JSON.
 function app_send_json(int $statusCode, array $payload): void
 {
     http_response_code($statusCode);
@@ -48,6 +53,7 @@ function app_read_json_body(): array
     return $decoded;
 }
 
+// Conexion a base de datos y utilidades de autenticacion.
 function app_db(): mysqli
 {
     static $db = null;
@@ -123,6 +129,7 @@ function app_new_id(): string
     return sprintf('%d%03d', (int) round(microtime(true) * 1000000), random_int(100, 999));
 }
 
+// Helpers de acceso a usuarios y datos por defecto.
 function app_user_payload(array $userRow): array
 {
     $createdAtRaw = (string) ($userRow['created_at'] ?? date('Y-m-d H:i:s'));

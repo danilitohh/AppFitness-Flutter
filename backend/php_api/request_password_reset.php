@@ -1,8 +1,12 @@
 <?php
 declare(strict_types=1);
 
+// Endpoint para solicitar recuperacion de contrasena.
+// Genera un codigo temporal si el correo existe y devuelve respuesta generica.
+
 require __DIR__ . '/bootstrap.php';
 
+// 1. Validacion del request.
 app_require_post();
 $payload = app_read_json_body();
 
@@ -15,6 +19,7 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 }
 
 try {
+    // 2. Se crea o actualiza el ticket temporal sin filtrar si el correo existe.
     $db = app_db();
     $user = app_find_user_by_email($db, $email);
 
@@ -50,6 +55,7 @@ try {
 
     app_send_json(200, $response);
 } catch (mysqli_sql_exception $error) {
+    // 3. Error de persistencia al guardar el ticket de recuperacion.
     app_send_json(500, [
         'success' => false,
         'message' => 'No se pudo generar el codigo de recuperacion.',
